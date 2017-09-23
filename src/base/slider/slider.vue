@@ -2,20 +2,26 @@
   <div class="slider" ref="slider">
     <div class="slider-group" ref="sliderGroup">
       <slot>
-
       </slot>
     </div>
     <div class="dots">
-
+      <span class="dot" v-for="(item,index) in dots" :class="{active:currentPageIndex === index}"></span>
     </div>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-//  import Bscoll from 'better-scroll'
+  import BScroll from 'better-scroll'
   import { addClass } from 'common/js/dom'
 
   export default {
+    data () {
+      return {
+        // 轮播圆点
+        dots: [],
+        currentPageIndex: 0
+      }
+    },
     props: {
       // 轮播
       loop: {
@@ -37,14 +43,23 @@
     mounted () {
       setTimeout(() => {
         this._setSliderWidth()
+        this._initDots()
         this._initSlider()
+        if (this.autoPlay) {
+          this._play()
+        }
       }, 20)
     },
     methods: {
+      // 圆点
+      _initDots () {
+        this.dots = new Array(this.children.length)
+      },
       // 计算轮播宽度
-      _setSliderWidth () {
+      _setSliderWidth (isResize) {
         // 所有子容器
         this.children = this.$refs.sliderGroup.children
+
         let width = 0
         // 子容器宽度（屏幕宽度）
         let sliderWidth = this.$refs.slider.clientWidth
@@ -58,16 +73,57 @@
           child.style.width = sliderWidth + 'px'
           // 容器宽度总和
           width += sliderWidth
-          // 当循环滚动时，slider的宽度需要为两倍
-          if (this.loop) {
-            width += 2 * sliderWidth
-          }
-          this.$refs.sliderGroup.style.width = width + 'px'
         }
+        // 当循环滚动时，slider的宽度需要为两倍
+        if (this.loop && !isResize) {
+          width += 2 * sliderWidth
+        }
+        this.$refs.sliderGroup.style.width = width + 'px'
       },
       // 初始化轮播
       _initSlider () {
+        this.slider = new BScroll(this.$refs.slider, {
+          // 横轴方向初始化位置
+          scrollX: true,
+          // 纵轴方向初始化位置
+          scrollY: false,
+          // 当快速在屏幕上滑动一段距离的时候，会根据滑动的距离和时间计算出动量，并生成滚动动画。设置为 true 则开启动画
+          momentum: false,
+          // 自动分割容器，用于制作走马灯效果等
+          snap: true,
+          snapLoop: this.loop,
+          snapThreshold: 0.3,
+          snapSpeed: 400,
+          // 允许点击
+          click: true
+        })
 
+        this.slider.on('scrollEnd', () => {
+          // 通过BScroll自带方法，获取当前index
+          let pageIndex = this.slider.getCurrentPage().pageX
+          if (this.loop) {
+            pageIndex -= 1
+          }
+          // 将pageIndex赋值给currentPageIndex
+          this.currentPageIndex = pageIndex
+
+          if (this.autoPlay) {
+            // 防止与手动拖动起冲突，每次滚动结束清空时间
+            clearTimeout(this.timer)
+            this._play()
+          }
+        })
+      },
+      _play () {
+        let pageIndex = this.currentPageIndex + 1
+        if (this.loop) {
+          pageIndex += 1
+        }
+        // 设置定时器
+        this.timer = setTimeout(() => {
+          // BScroll自带方法跳转
+          this.slider.goToPage(pageIndex, 0, 400)
+        }, this.interval)
       }
     }
   }
@@ -78,6 +134,7 @@
 
   .slider
     min-height: 1px
+    position: relative
     .slider-group
       position: relative
       overflow: hidden
