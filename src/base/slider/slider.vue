@@ -5,7 +5,7 @@
       </slot>
     </div>
     <div class="dots">
-      <span class="dot" v-for="(item,index) in dots" :class="{active:currentPageIndex === index}"></span>
+      <span class="dot" v-for="(item, index) in dots" :class="{active:currentPageIndex === index}"></span>
     </div>
   </div>
 </template>
@@ -49,6 +49,15 @@
           this._play()
         }
       }, 20)
+      // 显示区域宽度改变重新计算宽度
+      window.addEventListener('resize', () => {
+        if (!this.slider) {
+          return
+        }
+        this._setSliderWidth(true)
+        // 宽度重新计算之后，刷新Bscroll
+        this.slider.refresh()
+      })
     },
     methods: {
       // 圆点
@@ -93,9 +102,7 @@
           snap: true,
           snapLoop: this.loop,
           snapThreshold: 0.3,
-          snapSpeed: 400,
-          // 允许点击
-          click: true
+          snapSpeed: 400
         })
 
         this.slider.on('scrollEnd', () => {
@@ -125,6 +132,11 @@
           this.slider.goToPage(pageIndex, 0, 400)
         }, this.interval)
       }
+    },
+    // 组件被销毁时调用
+    deactivated () {
+      // 好的编程习惯
+      clearTimeout(this.timer)
     }
   }
 </script>
@@ -166,8 +178,10 @@
         height: 8px
         border-radius: 50%
         background: $color-text-l
+        transition: all 0.3s ease-out
         &.active
           width: 20px
           border-radius: 5px
           background: $color-text-ll
+          transition: all 0.3s ease-out
 </style>
