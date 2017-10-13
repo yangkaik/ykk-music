@@ -1,12 +1,12 @@
 <template>
   <div class="recommend">
-    <scroll class="recommend-content" :data="discList">
+    <scroll ref="scroll" class="recommend-content" :data="discList">
       <div>
         <div class="slider-wrapper" v-if="recommends.length">
           <slider>
             <div v-for="item in recommends">
               <a :href="item.linkUrl">
-                <img :src="item.picUrl" alt="">
+                <img @load="loadImage" :src="item.picUrl" alt="">
               </a>
             </div>
           </slider>
@@ -63,6 +63,15 @@
             }
           }
         )
+      },
+      // 避免列表数据先加载到，Bscroll高度计算错误
+      loadImage () {
+        // 技巧，定义参数，避免多次加载后重复执行refresh方法
+        if (!this.checkloaded) {
+          console.log(!this.checkloaded)
+          this.$refs.scroll.refresh()
+          this.checkloaded = true
+        }
       }
     },
     components: {
