@@ -6,7 +6,8 @@
           <slider>
             <div v-for="item in recommends">
               <a :href="item.linkUrl">
-                <img @load="loadImage" :src="item.picUrl" alt="">
+                <!-- 插件fastclick自带方法，检查有无needsclick -->
+                <img class="needsclick" @load="loadImage" :src="item.picUrl" alt="">
               </a>
             </div>
           </slider>
@@ -16,7 +17,7 @@
           <ul>
             <li @click="selectItem(item)" v-for="item in discList" class="item">
               <div class="icon">
-                <img width="60" height="60" :src="item.imgurl">
+                <img width="60" height="60" v-lazy="item.imgurl">
               </div>
               <div class="text">
                 <h2 class="name" v-html="item.creator.name"></h2>
@@ -26,11 +27,15 @@
           </ul>
         </div>
       </div>
+      <div class="loading-container">
+        <loading v-show="!discList.length"></loading>
+      </div>
     </scroll>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+  import Loading from 'base/loading/loading'
   import Scroll from 'base/scroll/scroll'
   import { getRecommend, getDiscList } from 'api/recommend'
   import { ERR_OK } from 'api/config'
@@ -68,7 +73,6 @@
       loadImage () {
         // 技巧，定义参数，避免多次加载后重复执行refresh方法
         if (!this.checkloaded) {
-          console.log(!this.checkloaded)
           this.$refs.scroll.refresh()
           this.checkloaded = true
         }
@@ -76,7 +80,8 @@
     },
     components: {
       Slider,
-      Scroll
+      Scroll,
+      Loading
     }
   }
 </script>
