@@ -5,23 +5,48 @@
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
           <li v-for="item in group.items" class="list-group-item">
-            <img :src="item.avatar" alt="" class="avatar">
+            <img v-lazy="item.avatar" alt="" class="avatar">
             <span class="name">{{item.name}}</span>
           </li>
         </ul>
       </li>
     </ul>
+    <div class="list-shortcut">
+      <ul>
+        <li v-for="(item ,index) in shortcutList"
+            @touchstart="onShortcutTouchStart"
+            :data-index="index"
+            class="item">
+          {{item}}
+        </li>
+      </ul>
+    </div>
   </scroll>
 </template>
 
 <script type="text/ecmascript-6">
   import Scroll from 'base/scroll/scroll'
+  import { getData } from 'common/js/dom'
 
   export default {
     props: {
       data: {
         type: Array,
         default: []
+      }
+    },
+    methods: {
+      onShortcutTouchStart (e) {
+        // anchor 锚点
+        let anchorIndex = getData(e.target, 'index')
+      }
+    },
+    // vue的计算属性
+    computed: {
+      shortcutList () {
+        return this.data.map((group) => {
+          return group.title.substr(0, 1)
+        })
       }
     },
     components: {
