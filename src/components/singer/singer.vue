@@ -1,6 +1,6 @@
 <template>
   <div class="singer">
-    singer
+    <listview :data="singers"></listview>
   </div>
 </template>
 
@@ -8,6 +8,7 @@
   import { getSingerList } from 'api/singer'
   import { ERR_OK } from 'api/config'
   import Singer from 'common/js/singer'
+  import Listview from 'base/listview/listview'
 
   const HOT_NAME = '热门'
   const HOT_SINGER_LEN = 10
@@ -79,6 +80,9 @@
         // concat() 方法用于连接两个或多个数组。
         return hot.concat(ret)
       }
+    },
+    components: {
+      Listview
     }
   }
 </script>
