@@ -1,7 +1,12 @@
 <template>
-  <scroll class="listview" :data="data">
+  <scroll
+    class="listview"
+    :data="data"
+    ref="listview">
     <ul>
-      <li v-for="group in data" class="list-group">
+      <li v-for="group in data"
+          ref="listGroup"
+          class="list-group">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
           <li v-for="item in group.items" class="list-group-item">
@@ -39,6 +44,7 @@
       onShortcutTouchStart (e) {
         // anchor 锚点
         let anchorIndex = getData(e.target, 'index')
+        this.$refs.listview.scroll.scrollToElement(this.$refs.listGroup[anchorIndex], 0)
       }
     },
     // vue的计算属性
