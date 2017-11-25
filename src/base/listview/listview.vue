@@ -2,6 +2,9 @@
   <scroll
     class="listview"
     :data="data"
+    :listenScroll="listenScroll"
+    :probe-type="probeType"
+    @scroll="scroll"
     ref="listview">
     <ul>
       <li v-for="group in data"
@@ -16,10 +19,12 @@
         </ul>
       </li>
     </ul>
-    <div class="list-shortcut">
+    <div class="list-shortcut"
+         @touchstart="onShortcutTouchStart"
+         @touchmove.stop.prevent="onShortcutTouchMove">
       <ul>
         <li v-for="(item ,index) in shortcutList"
-            @touchstart="onShortcutTouchStart"
+            :class="{'current': currentIndex === index}"
             :data-index="index"
             class="item">
           {{item}}
@@ -33,7 +38,24 @@
   import Scroll from 'base/scroll/scroll'
   import { getData } from 'common/js/dom'
 
+  // 锚点高度
+  const ANCHOR_HEIGHT = 18
   export default {
+    created () {
+      // scroll组件参数，3（不需要节流）
+      this.probeType = 3
+      // 用于存放锚点的各个参数
+      this.touch = {}
+      // 监听scroll事件
+      this.listenScroll = true
+      this.listHeight = []
+    },
+    data () {
+      return {
+        scrollY: -1,
+        currentIndex: 0
+      }
+    },
     props: {
       data: {
         type: Array,
@@ -41,13 +63,85 @@
       }
     },
     methods: {
+      // 书写建议，私有方法放在下方，公共方法放在上方
       onShortcutTouchStart (e) {
         // anchor 锚点
         let anchorIndex = getData(e.target, 'index')
-        this.$refs.listview.scroll.scrollToElement(this.$refs.listGroup[anchorIndex], 0)
+        let firstTouch = e.touches[0]
+        // 首次点击锚点的pageY值
+        this.touch.y1 = firstTouch.pageY
+        // 初始化锚点index
+        this.touch.anchorIndex = anchorIndex
+        console.log(firstTouch)
+        this._scrollTo(anchorIndex)
+      },
+      onShortcutTouchMove (e) {
+        let firstTouch = e.touches[0]
+        this.touch.y2 = firstTouch.pageY
+        // 偏移的锚点数 |0 是向下取整数，相当于math.floor()
+        let delta = (this.touch.y2 - this.touch.y1) / ANCHOR_HEIGHT | 0
+        // 移动过后的锚点 index值
+        let anchorIndex = parseInt(this.touch.anchorIndex) + delta
+        this._scrollTo(anchorIndex)
+      },
+      scroll (pos) {
+        this.scrollY = pos.y
+      },
+      _scrollTo (index) {
+        // 点击边界的时候
+        if (!index && index !== 0) {
+          return
+        }
+        // 滚动到顶部的时候
+        if (index < 0) {
+          index = 0
+          // 滚动到底部的时候
+        } else if (index > this.listHeight.length - 2) {
+          index = this.listHeight.length - 2
+        }
+        this.scrollY = -this.listHeight[index]
+        this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
+      },
+      _calculateHeight () {
+        this.listHeight = []
+        const list = this.$refs.listGroup
+        let height = 0
+        this.listHeight.push(height)
+        for (let i = 0; i < list.length; i++) {
+          let item = list[i]
+          height += item.clientHeight
+          this.listHeight.push(height)
+        }
       }
     },
-    // vue的计算属性
+    watch: {
+      data () {
+        setTimeout(() => {
+          this._calculateHeight()
+        }, 20)
+      },
+      scrollY (newY) {
+        const listHeight = this.listHeight
+        // 当滚动到顶部，newY>0
+        if (newY > 0) {
+          this.currentIndex = 0
+          return
+        }
+        // 在中间部分滚动
+        for (let i = 0; i < listHeight.length - 1; i++) {
+          let height1 = listHeight[i]
+          let height2 = listHeight[i + 1]
+          if (-newY >= height1 && -newY < height2) {
+            this.currentIndex = i
+            console.log(this.currentIndex)
+            return
+          }
+        }
+        // 当滚动到底部，且-newY大于最后一个元素的上限
+        this.currentIndex = listHeight.length - 2
+      }
+    },
+    // 计算属性
     computed: {
       shortcutList () {
         return this.data.map((group) => {

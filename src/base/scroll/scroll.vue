@@ -6,6 +6,7 @@
 
 <script type="text/ecmascript-6">
   import BScroll from 'better-scroll'
+
   export default {
     props: {
       probeType: {
@@ -19,6 +20,10 @@
       data: {
         type: Array,
         default: null
+      },
+      listenScroll: {
+        type: Boolean,
+        default: false
       }
     },
     mounted () {
@@ -35,6 +40,12 @@
           probeType: this.probeType,
           click: this.click
         })
+        if (this.listenScroll) {
+          let me = this
+          this.scroll.on('scroll', (pos) => {
+            me.$emit('scroll', pos)
+          })
+        }
       },
       disable () {
         this.scroll && this.scroll.disable()
@@ -45,11 +56,11 @@
       refresh () {
         this.scroll && this.scroll.refresh()
       },
-      scrollTo() {
-        this.scroll && this.scrllTo.apply(this.scroll, arguments)
+      scrollTo () {
+        this.scroll && this.scroll.scrollTo.apply(this.scroll, arguments)
       },
-      scrollToElement() {
-        this.scroll && this.scrollToElement.apply(this.scroll, arguments)
+      scrollToElement () {
+        this.scroll && this.scroll.scrollToElement.apply(this.scroll, arguments)
       }
     },
     watch: {
