@@ -31,15 +31,24 @@
         </li>
       </ul>
     </div>
+    <div class="list-fixed" ref="fixed">
+      <h1 class="fixed-title" v-show="fixedTitle">{{fixedTitle}}</h1>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <loading :title="title"></loading>
+    </div>
   </scroll>
 </template>
 
 <script type="text/ecmascript-6">
   import Scroll from 'base/scroll/scroll'
   import { getData } from 'common/js/dom'
+  import Loading from 'base/loading/loading'
 
   // 锚点高度
   const ANCHOR_HEIGHT = 18
+  // 标题高度
+  const TITLE_HEIGHT = 30
   export default {
     created () {
       // scroll组件参数，3（不需要节流）
@@ -53,7 +62,10 @@
     data () {
       return {
         scrollY: -1,
-        currentIndex: 0
+        currentIndex: 0,
+        // 滚动到的区块上限高度减去 滚动的高度
+        diff: -1,
+        title: '歌手数据加载中...'
       }
     },
     props: {
@@ -72,7 +84,6 @@
         this.touch.y1 = firstTouch.pageY
         // 初始化锚点index
         this.touch.anchorIndex = anchorIndex
-        console.log(firstTouch)
         this._scrollTo(anchorIndex)
       },
       onShortcutTouchMove (e) {
@@ -129,16 +140,28 @@
         }
         // 在中间部分滚动
         for (let i = 0; i < listHeight.length - 1; i++) {
+          // i区块的高度
           let height1 = listHeight[i]
+          // i下面区块的高度
           let height2 = listHeight[i + 1]
           if (-newY >= height1 && -newY < height2) {
             this.currentIndex = i
-            console.log(this.currentIndex)
+            this.diff = height2 + newY
             return
           }
         }
         // 当滚动到底部，且-newY大于最后一个元素的上限
         this.currentIndex = listHeight.length - 2
+      },
+      diff (newVal) {
+        // 偏移量
+        let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+        // fixedTop数值改变时才执行dom操作，性能优化
+        if (this.fixedTop === fixedTop) {
+          return
+        }
+        this.fixedTop = fixedTop
+        this.$refs.fixed.style.transform = `translate3d(0,${fixedTop}px,0)`
       }
     },
     // 计算属性
@@ -147,10 +170,17 @@
         return this.data.map((group) => {
           return group.title.substr(0, 1)
         })
+      },
+      fixedTitle () {
+        if (this.scrollY > 0) {
+          return ''
+        }
+        return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
       }
     },
     components: {
-      Scroll
+      Scroll,
+      Loading
     }
   }
 </script>
