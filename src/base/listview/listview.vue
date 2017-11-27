@@ -12,7 +12,9 @@
           class="list-group">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li v-for="item in group.items" class="list-group-item">
+          <li v-for="item in group.items"
+              @click="selectItem(item)"
+              class="list-group-item">
             <img v-lazy="item.avatar" alt="" class="avatar">
             <span class="name">{{item.name}}</span>
           </li>
@@ -75,6 +77,9 @@
       }
     },
     methods: {
+      selectItem (item) {
+        this.$emit('select', item)
+      },
       // 书写建议，私有方法放在下方，公共方法放在上方
       onShortcutTouchStart (e) {
         // anchor 锚点
