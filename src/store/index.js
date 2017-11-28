@@ -4,6 +4,8 @@ import * as actions from './actions'
 import * as getters from './getters'
 import state from './state'
 import mutations from './mutations'
+// mutations修改后的日志输出
+import creatLogger from 'vuex/dist/logger'
 
 Vue.use(Vuex)
 // npm run dev 是dev环境，npm run build 是production
@@ -15,5 +17,6 @@ export default new Vuex.Store({
   state,
   mutations,
   // vuex严格模式
-  strict: debug
+  strict: debug,
+  plugins: debug ? [creatLogger()] : []
 })

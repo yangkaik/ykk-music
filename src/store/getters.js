@@ -1,3 +1,1 @@
-import state from './state'
-
-export const singer = singer => state.singer
+export const singer = state => state.singer

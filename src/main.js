@@ -5,6 +5,7 @@ import fastclick from 'fastclick'
 import router from './router'
 import 'common/stylus/index.styl'
 import VueLeazyLoad from 'vue-lazyload'
+import store from './store'
 
 // 解决移动端点击300毫秒延迟问题
 fastclick.attach(document.body)
@@ -18,5 +19,6 @@ Vue.use(VueLeazyLoad, {
 new Vue({
   el: '#app',
   render: h => h(App),
-  router
+  router,
+  store
 })
