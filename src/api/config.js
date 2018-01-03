@@ -8,6 +8,7 @@ export const commonParams = {
 }
 
 export const options = {
+  // 参数
   param: 'jsonpCallback'
 }
 
