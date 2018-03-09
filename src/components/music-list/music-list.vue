@@ -7,18 +7,24 @@
     <div class="bg-image" :style="bgStyle" ref="bgImage">
       <div class="filter"></div>
     </div>
-    <scroll :data="songs" class="list" ref="list">
+    <div class="bg-layer" ref="layer"></div>
+    <scroll :data="songs"
+            @scroll="scroll"
+            :listen-scroll="listenScroll"
+            :probe-type="probeType"
+            class="list"
+            ref="list">
       <div class="song-list-wrapper">
         <song-list :songs="songs"></song-list>
       </div>
     </scroll>
   </div>
 </template>
-
 <script type="text/ecmascript-6">
   import SongList from 'base/song-list/song-list'
   import Scroll from 'base/scroll/scroll'
 
+  const RESERVED_HEIGHT = 40
   export default {
     props: {
       bgImage: {
@@ -34,19 +40,53 @@
         default: ''
       }
     },
+    data () {
+      return {
+        scrollY: 0
+      }
+    },
     computed: {
       bgStyle () {
         return `background-image:url(${this.bgImage})`
       }
     },
+    created () {
+      this.probeType = 3
+      this.listenScroll = true
+    },
     mounted () {
       this.imageHeight = this.$refs.bgImage.clientHeight
+      this.minTransalteY = -this.imageHeight + RESERVED_HEIGHT
       // this.$refs.list是一个对象，this.$refs.list.$el是dom元素
       this.$refs.list.$el.style.top = `${this.imageHeight}px`
+    },
+    methods: {
+      scroll (pos) {
+        this.scrollY = pos.y
+      },
+      back () {
+        this.$router.back()
+      }
     },
     components: {
       SongList,
       Scroll
+    },
+    watch: {
+      scrollY (newVal) {
+        let zIndex = 0
+        let translateY = Math.max(this.minTransalteY, newVal)
+        this.$refs.layer.style['transform'] = `translate3d(0,${translateY}px,0)`
+        if (newVal < this.minTransalteY) {
+          zIndex = 10
+          this.$refs.bgImage.style.paddingTop = 0
+          this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
+        } else {
+          this.$refs.bgImage.style.paddingTop = '70%'
+          this.$refs.bgImage.style.height = 0
+        }
+        this.$refs.bgImage.style.zIndex = zIndex
+      }
     }
   }
 </script>
